@@ -1,6 +1,6 @@
 """
 셀레니움을 이용한 간단한 자동화 수강 프로그램
-마지막 업데이트 2022-03-11
+마지막 업데이트 2022-03-16
 """
 
 
@@ -10,6 +10,9 @@ from selenium.webdriver.common.by import By
 import time
 import datetime
 
+userID = input("ID입력 : ")
+userPassword = input("PW입력 : ")
+
 # 크롬브라우저 열기
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
@@ -18,9 +21,9 @@ driver.get('https://plato.pusan.ac.kr/')
 
 # 로그인
 login = driver.find_element(By.ID, "input-username")
-login.send_keys(input("ID입력 : "))
+login.send_keys(userID)
 login = driver.find_element(By.ID, "input-password")
-login.send_keys(input("PW입력 : "))
+login.send_keys(userPassword)
 driver.find_element(By.NAME, "loginbutton").click()
 time.sleep(3)
 
@@ -62,9 +65,7 @@ for lec_num in range(lec_count):
                 time_list.append(driver.find_element(By.XPATH, '/html/body/div[3]/div[2]/div[2]/div[2]/div/div[2]/div/div[2]/table/tbody/tr[' + str(i) + ']/td[2]').text)
             else:
                 check = driver.find_element(By.XPATH, '/html/body/div[3]/div[2]/div[2]/div[2]/div/div[2]/div/div[2]/table/tbody/tr[' + str(i) + ']/td[5]')
-                if check.text == 'O':
-                    pass
-                elif check.text == 'X':
+                if check.text == 'X':
                     check_list.append(driver.find_element(By.XPATH, '/html/body/div[3]/div[2]/div[2]/div[2]/div/div[2]/div/div[2]/table/tbody/tr[' + str(i) + ']/td[2]').text)
                     time_list.append(driver.find_element(By.XPATH, '/html/body/div[3]/div[2]/div[2]/div[2]/div/div[2]/div/div[2]/table/tbody/tr[' + str(i) + ']/td[3]').text)
         except:
@@ -83,23 +84,28 @@ for lec_num in range(lec_count):
 
     # 강의 듣기
     sequence = 0
-    video_list = driver.find_elements(By.CSS_SELECTOR, '.course-box-current .instancename')
+    video_list = driver.find_elements(By.CSS_SELECTOR, '.instancename')  # 강의목록 가져오기
     for check in check_list:
         for video in video_list:
-            if (check in video.text) and ('동영상' in video.text):
+            if (check in video.text) and ('동영상' in video.text):  # 수강해야할 강의인지 확인
+                check_list[check_list.index(check)] = 0  # 수강한 강의 리스트에서 제거
                 video.click()
                 time.sleep(2)
 
+                # 주의: alert 처리 미구현
                 driver.switch_to.window(driver.window_handles[1])
-                driver.find_element(By.CSS_SELECTOR, '.vjs-big-play-button').click()
+                driver.find_element(By.CSS_SELECTOR, '.vjs-big-play-button').click()  # 강의 재생 버튼
+                time.sleep(1)
+                driver.find_element(By.CSS_SELECTOR, '.vjs-mute-control').click()  # 강의 소리 끄기
 
+                # 강의 시간동안 기다리기 (출석 인정시간 * 1.2)
                 try:
                     lec_time = time.strptime(time_list[sequence], "%H:%M:%S")
                 except:
                     lec_time = time.strptime(time_list[sequence], "%M:%S")
                 time.sleep(datetime.timedelta(hours=lec_time.tm_hour,
                                             minutes=lec_time.tm_min,
-                                            seconds=lec_time.tm_sec).total_seconds()*1.1)
+                                            seconds=lec_time.tm_sec).total_seconds()*1.2)
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
                 sequence += 1

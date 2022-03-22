@@ -7,6 +7,7 @@
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
 import time
 import datetime
 
@@ -14,7 +15,8 @@ userID = input("ID입력 : ")
 userPassword = input("PW입력 : ")
 
 # 크롬브라우저 열기
-driver = webdriver.Chrome(ChromeDriverManager().install())
+chrome_options = webdriver.ChromeOptions()
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 # 학교홈페이지로 이동
 driver.get('https://plato.pusan.ac.kr/')
@@ -88,7 +90,6 @@ for lec_num in range(lec_count):
     for check in check_list:
         for video in video_list:
             if (check in video.text) and ('동영상' in video.text):  # 수강해야할 강의인지 확인
-                check_list[check_list.index(check)] = 0  # 수강한 강의 리스트에서 제거
                 video.click()
                 time.sleep(2)
 
@@ -98,17 +99,18 @@ for lec_num in range(lec_count):
                 time.sleep(1)
                 driver.find_element(By.CSS_SELECTOR, '.vjs-mute-control').click()  # 강의 소리 끄기
 
-                # 강의 시간동안 기다리기 (출석 인정시간 * 1.2)
+                # 강의 시간동안 기다리기 (출석 인정시간 * 1.12)
                 try:
                     lec_time = time.strptime(time_list[sequence], "%H:%M:%S")
                 except:
                     lec_time = time.strptime(time_list[sequence], "%M:%S")
                 time.sleep(datetime.timedelta(hours=lec_time.tm_hour,
                                             minutes=lec_time.tm_min,
-                                            seconds=lec_time.tm_sec).total_seconds()*1.2)
+                                            seconds=lec_time.tm_sec).total_seconds()*1.12)
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
                 sequence += 1
+                break  # 다음 check 로 넘어가기
 
     # 강의실 퇴장
     driver.back()

@@ -39,7 +39,7 @@ closeBtn_list = driver.find_elements(By.CSS_SELECTOR, '.close_notice')
 for i in range(len(closeBtn_list)-1, -1, -1):
     closeBtn_list[i].click()
 
-sequence = 0
+
 # 수강중인 강좌수만큼 반복
 for lec_num in range(lec_count):
     # 강의실 입장
@@ -74,6 +74,7 @@ for lec_num in range(lec_count):
             break
     len_check_list = len(check_list)
     print("이 강좌에서 수강하지 않은 강의 수: ", len_check_list)
+    sequence = 0
     if len_check_list:
         print("---강의 목록---")
         for check in check_list:
